@@ -1,15 +1,21 @@
 package com.sky.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sky.constant.MessageConstant;
 import com.sky.constant.StatusConstant;
+import com.sky.constant.TypeConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.CategoryDTO;
 import com.sky.dto.CategoryPageQueryDTO;
 import com.sky.entity.Category;
+import com.sky.entity.Dish;
+import com.sky.entity.Setmeal;
+import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.CategoryDao;
+import com.sky.mapper.DishDao;
+import com.sky.mapper.SetmealDao;
 import com.sky.result.PageResult;
 import com.sky.service.CategoryService;
 import org.springframework.beans.BeanUtils;
@@ -22,6 +28,12 @@ import java.time.LocalDateTime;
 public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private CategoryDao categoryDao;
+
+    @Autowired
+    private DishDao dishDao;
+
+    @Autowired
+    private SetmealDao setmealDao;
 
     /**
      * 分类分页查询
@@ -86,7 +98,36 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public void delete(Long id) {
-        categoryDao.deleteById(id);
+        Category category = categoryDao.selectById(id);
+        //设置DISH查询条件
+
+        LambdaQueryWrapper<Dish> lqw_dish = new LambdaQueryWrapper<>();
+        lqw_dish.eq(Dish::getCategoryId,id);
+
+        //设置Setmeal查询条件
+
+        LambdaQueryWrapper<Setmeal> lqw_setmeal = new LambdaQueryWrapper<>();
+        lqw_setmeal.eq(Setmeal::getCategoryId,id);
+
+        if(category.getType()== TypeConstant.TYPE_DISH){//判断是否是菜品分类
+            if(dishDao.selectList(lqw_dish).isEmpty()){//判断该分类下是否还有菜品
+                //无则删除该分类
+                categoryDao.deleteById(id);
+            }else {
+                //有则提示该分类还有关联的菜品
+                throw new DeletionNotAllowedException(MessageConstant.CATEGORY_BE_RELATED_BY_DISH);
+            }
+        }else if(category.getType() == TypeConstant.TYPE_SETMEAL) {//判断是否是套餐分类
+            if(setmealDao.selectList(lqw_setmeal).isEmpty()){//判断该分类下是否还有菜品
+                //无则删除该分类
+                categoryDao.deleteById(id);
+            }else {
+                //有则提示该分类还有关联的菜品
+                throw new DeletionNotAllowedException(MessageConstant.CATEGORY_BE_RELATED_BY_SETMEAL);
+            }
+        }else {//其他异常
+            throw new DeletionNotAllowedException(MessageConstant.UNKNOWN_ERROR);
+        }
     }
 
     /**
