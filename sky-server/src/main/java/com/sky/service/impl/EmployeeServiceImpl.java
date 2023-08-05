@@ -1,12 +1,17 @@
 package com.sky.service.impl;
 
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sky.constant.MessageConstant;
 import com.sky.constant.PasswordConstant;
 import com.sky.constant.StatusConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
+import com.sky.dto.EmployeePageQueryDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
@@ -14,6 +19,7 @@ import com.sky.exception.PasswordErrorException;
 import com.sky.exception.UsernameAlreadyExistsException;
 import com.sky.mapper.EmployeeDao;
 import com.sky.mapper.EmployeeMapper;
+import com.sky.result.PageResult;
 import com.sky.service.EmployeeService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +57,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         //密码比对
-        // TODO 后期需要进行md5加密，然后再进行比对
         password = DigestUtils.md5DigestAsHex(password.getBytes());
         if (!password.equals(employee.getPassword())) {
             //密码错误
@@ -101,5 +106,32 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         employeeDao.insert(employee);
 
+    }
+
+    /**
+     * 员工分页查询
+     * @param employeePageQueryDTO
+     * @return
+     */
+    @Override
+    public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) {
+        //分页
+        IPage page = new Page(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize());
+
+        LambdaQueryWrapper<Employee> lqw = new LambdaQueryWrapper<>();
+
+        //判断是否使用员工姓名查询
+        String name = employeePageQueryDTO.getName();
+        if(name!=null){
+            //MP模糊查询
+            lqw.like(Employee::getName,employeePageQueryDTO.getName());
+        }
+
+        employeeDao.selectPage(page,lqw);
+
+        PageResult pageResult = new PageResult();
+        pageResult.setTotal(page.getTotal());
+        pageResult.setRecords(page.getRecords());
+        return pageResult;
     }
 }
