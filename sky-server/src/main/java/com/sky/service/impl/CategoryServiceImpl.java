@@ -89,5 +89,20 @@ public class CategoryServiceImpl implements CategoryService {
         categoryDao.deleteById(id);
     }
 
+    /**
+     * 修改分类
+     * @param categoryDTO
+     */
+    @Override
+    public void update(CategoryDTO categoryDTO) {
+        //复制数据DTO=》category中
+        Category category = new Category();
+        BeanUtils.copyProperties(categoryDTO,category);
+        //设置修改时间与修改人
+        category.setUpdateTime(LocalDateTime.now());
+        category.setUpdateUser(BaseContext.getCurrentId());
+        categoryDao.updateById(category);
+    }
+
 
 }
