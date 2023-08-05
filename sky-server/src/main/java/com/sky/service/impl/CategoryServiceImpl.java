@@ -104,5 +104,22 @@ public class CategoryServiceImpl implements CategoryService {
         categoryDao.updateById(category);
     }
 
+    /**
+     * 启用禁用分类
+     * @param status
+     * @param id
+     */
+    @Override
+    public void statOrStop(Integer status, Long id) {
+        Category category = Category.builder()
+                .id(id)
+                .status(status)
+                .createTime(LocalDateTime.now())
+                .createUser(BaseContext.getCurrentId())
+                .build();
+
+        categoryDao.updateById(category);
+    }
+
 
 }
