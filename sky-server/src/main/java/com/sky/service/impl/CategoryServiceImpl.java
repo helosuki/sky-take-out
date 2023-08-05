@@ -23,8 +23,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.rmi.AlreadyBoundException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -86,7 +86,7 @@ public class CategoryServiceImpl implements CategoryService {
         BeanUtils.copyProperties(categoryDTO,category);
         //设置查询条件当表中sort与新增sort是否有重复
         LambdaQueryWrapper<Category> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(Category::getSort,category.getSort());
+        lqw.eq(Category::getSort,category.getSort()).or().eq(Category::getName,category.getName());
         if(categoryDao.selectList(lqw).isEmpty()){
 
             //若srot无重复时，则设置分类的修改时间和修改人以及创建时间创建人，状态
@@ -99,7 +99,7 @@ public class CategoryServiceImpl implements CategoryService {
             categoryDao.insert(category);
         }else {
             //排序重复，抛出异常
-            throw new AlreadyExistsException(MessageConstant.SORT_ALREADY_EXISTS);
+            throw new AlreadyExistsException(MessageConstant.SORT_OR_NAME_ALREADY_EXISTS);
         }
     }
 
@@ -150,17 +150,19 @@ public class CategoryServiceImpl implements CategoryService {
         //复制数据DTO=》category中
         Category category = new Category();
         BeanUtils.copyProperties(categoryDTO,category);
-        //设置查询条件当表中sort与新增sort是否有重复
+        //设置查询条件当表修改时的分类名或者sort重复时抛出重复异常
         LambdaQueryWrapper<Category> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(Category::getSort,category.getSort());
-        if(categoryDao.selectList(lqw).isEmpty()){
+        lqw.eq(Category::getSort,category.getSort()).or().eq(Category::getName,category.getName());
+        List<Category> list = categoryDao.selectList(lqw);
+        int size = list.size();
+        if(size<=1){
             //设置修改时间与修改人
             category.setUpdateTime(LocalDateTime.now());
             category.setUpdateUser(BaseContext.getCurrentId());
             categoryDao.updateById(category);
         }else {
             //排序重复，抛出异常
-            throw new AlreadyExistsException(MessageConstant.SORT_ALREADY_EXISTS);
+            throw new AlreadyExistsException(MessageConstant.SORT_OR_NAME_ALREADY_EXISTS);
         }
     }
 
