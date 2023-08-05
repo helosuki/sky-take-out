@@ -1,15 +1,22 @@
 package com.sky.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sky.constant.StatusConstant;
+import com.sky.context.BaseContext;
+import com.sky.dto.CategoryDTO;
 import com.sky.dto.CategoryPageQueryDTO;
 import com.sky.entity.Category;
 import com.sky.mapper.CategoryDao;
 import com.sky.result.PageResult;
 import com.sky.service.CategoryService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -43,6 +50,7 @@ public class CategoryServiceImpl implements CategoryService {
                         .like(Category::getType, categoryPageQueryDTO.getType());
             }
         }
+
         //page:分页信息 lqw当前查询约束条件
         categoryDao.selectPage(page,lqw);
 
@@ -52,4 +60,25 @@ public class CategoryServiceImpl implements CategoryService {
         pageResult.setRecords(page.getRecords());
         return pageResult;
     }
+
+    /**
+     * 新增分类
+     * @param categoryDTO
+     */
+    @Override
+    public void save(CategoryDTO categoryDTO) {
+        //复制对象数据categoryDTO=>category
+        Category category = new Category();
+        BeanUtils.copyProperties(categoryDTO,category);
+
+        category.setStatus(StatusConstant.DISABLE);
+        category.setCreateTime(LocalDateTime.now());
+        category.setCreateUser(BaseContext.getCurrentId());
+        category.setUpdateTime(LocalDateTime.now());
+        category.setUpdateUser(BaseContext.getCurrentId());
+
+        categoryDao.insert(category);
+    }
+
+
 }
