@@ -48,4 +48,17 @@ public class CategoryController {
         categoryService.save(categoryDTO);
         return Result.success();
     }
+
+    /**
+     * 根据id删除分类
+     * @param id
+     * @return
+     */
+    @DeleteMapping
+    @ApiOperation("根据id删除分类")
+    public Result delete(Long id){
+        log.info("根据id删除分类：{}",id);
+        categoryService.delete(id);
+        return Result.success();
+    }
 }

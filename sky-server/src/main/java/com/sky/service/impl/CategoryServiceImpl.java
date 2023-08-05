@@ -80,5 +80,14 @@ public class CategoryServiceImpl implements CategoryService {
         categoryDao.insert(category);
     }
 
+    /**
+     * 根据id删除分类
+     * @param id
+     */
+    @Override
+    public void delete(Long id) {
+        categoryDao.deleteById(id);
+    }
+
 
 }

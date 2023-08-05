@@ -17,4 +17,10 @@ public interface CategoryService {
      * @param categoryDTO
      */
     void save(CategoryDTO categoryDTO);
+
+    /**
+     *
+     * @param id
+     */
+    void delete(Long id);
 }
