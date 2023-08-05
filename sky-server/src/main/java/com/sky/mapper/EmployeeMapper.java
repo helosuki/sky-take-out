@@ -16,6 +16,5 @@ public interface EmployeeMapper {
     @Select("select * from employee where username = #{username}")
     Employee getByUsername(String username);
 
-/*    @Insert("INSERT INTO employee(name,username,password)")
-    void save(Employee employee);*/
+    void save(Employee employee);
 }
