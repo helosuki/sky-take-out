@@ -12,6 +12,7 @@ import com.sky.dto.CategoryPageQueryDTO;
 import com.sky.entity.Category;
 import com.sky.entity.Dish;
 import com.sky.entity.Setmeal;
+import com.sky.exception.AlreadyExistsException;
 import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.CategoryDao;
 import com.sky.mapper.DishDao;
@@ -22,6 +23,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.rmi.AlreadyBoundException;
 import java.time.LocalDateTime;
 
 @Service
@@ -82,14 +84,22 @@ public class CategoryServiceImpl implements CategoryService {
         //复制对象数据categoryDTO=>category
         Category category = new Category();
         BeanUtils.copyProperties(categoryDTO,category);
+        //设置查询条件当表中sort与新增sort是否有重复
+        LambdaQueryWrapper<Category> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Category::getSort,category.getSort());
+        if(categoryDao.selectList(lqw).isEmpty()){
 
-        category.setStatus(StatusConstant.DISABLE);
-        category.setCreateTime(LocalDateTime.now());
-        category.setCreateUser(BaseContext.getCurrentId());
-        category.setUpdateTime(LocalDateTime.now());
-        category.setUpdateUser(BaseContext.getCurrentId());
+            //若srot无重复时，则设置分类的修改时间和修改人以及创建时间创建人，状态
+            category.setStatus(StatusConstant.DISABLE);
+            category.setCreateTime(LocalDateTime.now());
+            category.setCreateUser(BaseContext.getCurrentId());
+            category.setUpdateTime(LocalDateTime.now());
+            category.setUpdateUser(BaseContext.getCurrentId());
 
-        categoryDao.insert(category);
+            categoryDao.insert(category);
+        }else {
+            throw new AlreadyExistsException(MessageConstant.SORT_ALREADY_EXISTS);
+        }
     }
 
     /**

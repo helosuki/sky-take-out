@@ -16,7 +16,7 @@ import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.PasswordErrorException;
-import com.sky.exception.UsernameAlreadyExistsException;
+import com.sky.exception.AlreadyExistsException;
 import com.sky.mapper.EmployeeDao;
 import com.sky.mapper.EmployeeMapper;
 import com.sky.result.PageResult;
@@ -83,7 +83,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         QueryWrapper<Employee> qm = new QueryWrapper<>();
         String username = employeeDTO.getUsername();
         if(qm.select("username")!=null){
-            throw new UsernameAlreadyExistsException(username+MessageConstant.ALREADY_EXISTS);
+            throw new AlreadyExistsException(username+MessageConstant.ALREADY_EXISTS);
         }
 
         Employee employee = new Employee();
