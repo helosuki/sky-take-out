@@ -98,6 +98,7 @@ public class CategoryServiceImpl implements CategoryService {
 
             categoryDao.insert(category);
         }else {
+            //排序重复，抛出异常
             throw new AlreadyExistsException(MessageConstant.SORT_ALREADY_EXISTS);
         }
     }
@@ -149,10 +150,18 @@ public class CategoryServiceImpl implements CategoryService {
         //复制数据DTO=》category中
         Category category = new Category();
         BeanUtils.copyProperties(categoryDTO,category);
-        //设置修改时间与修改人
-        category.setUpdateTime(LocalDateTime.now());
-        category.setUpdateUser(BaseContext.getCurrentId());
-        categoryDao.updateById(category);
+        //设置查询条件当表中sort与新增sort是否有重复
+        LambdaQueryWrapper<Category> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Category::getSort,category.getSort());
+        if(categoryDao.selectList(lqw).isEmpty()){
+            //设置修改时间与修改人
+            category.setUpdateTime(LocalDateTime.now());
+            category.setUpdateUser(BaseContext.getCurrentId());
+            categoryDao.updateById(category);
+        }else {
+            //排序重复，抛出异常
+            throw new AlreadyExistsException(MessageConstant.SORT_ALREADY_EXISTS);
+        }
     }
 
     /**
