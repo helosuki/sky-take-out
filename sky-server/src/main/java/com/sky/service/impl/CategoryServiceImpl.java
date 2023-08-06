@@ -91,10 +91,10 @@ public class CategoryServiceImpl implements CategoryService {
 
             //若srot无重复时，则设置分类的修改时间和修改人以及创建时间创建人，状态
             category.setStatus(StatusConstant.DISABLE);
-            category.setCreateTime(LocalDateTime.now());
+/*            category.setCreateTime(LocalDateTime.now());
             category.setCreateUser(BaseContext.getCurrentId());
             category.setUpdateTime(LocalDateTime.now());
-            category.setUpdateUser(BaseContext.getCurrentId());
+            category.setUpdateUser(BaseContext.getCurrentId());*/
 
             categoryDao.insert(category);
         }else {
@@ -157,8 +157,8 @@ public class CategoryServiceImpl implements CategoryService {
         int size = list.size();
         if(size<=1){
             //设置修改时间与修改人
-            category.setUpdateTime(LocalDateTime.now());
-            category.setUpdateUser(BaseContext.getCurrentId());
+/*            category.setUpdateTime(LocalDateTime.now());
+            category.setUpdateUser(BaseContext.getCurrentId());*/
             categoryDao.updateById(category);
         }else {
             //排序重复，抛出异常
@@ -176,8 +176,8 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = Category.builder()
                 .id(id)
                 .status(status)
-                .createTime(LocalDateTime.now())
-                .createUser(BaseContext.getCurrentId())
+/*                .createTime(LocalDateTime.now())
+                .createUser(BaseContext.getCurrentId())*/
                 .build();
 
         categoryDao.updateById(category);

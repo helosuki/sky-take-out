@@ -21,12 +21,14 @@ import com.sky.mapper.EmployeeDao;
 import com.sky.mapper.EmployeeMapper;
 import com.sky.result.PageResult;
 import com.sky.service.EmployeeService;
+import kotlin.jvm.internal.Lambda;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -80,9 +82,12 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void save(EmployeeDTO employeeDTO) {
 
         //处理用户名已存在异常
-        QueryWrapper<Employee> qm = new QueryWrapper<>();
+        LambdaQueryWrapper<Employee> lqw = new LambdaQueryWrapper<>();
         String username = employeeDTO.getUsername();
-        if(qm.select("username")!=null){
+        lqw.eq(Employee::getUsername,username);
+        List<Employee> list = employeeDao.selectList(lqw);
+        int size = list.size();
+        if(size!=0){
             throw new AlreadyExistsException(username+MessageConstant.ALREADY_EXISTS);
         }
 
@@ -96,13 +101,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         //设置默认密码123456并md5加密
         employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes()));
 
-        //设置当前记录时间
+/*        //设置当前记录时间
         employee.setCreateTime(LocalDateTime.now());
         employee.setUpdateTime(LocalDateTime.now());
 
         //设置当前记录的id
         employee.setCreateUser(BaseContext.getCurrentId());
-        employee.setUpdateUser(BaseContext.getCurrentId());
+        employee.setUpdateUser(BaseContext.getCurrentId());*/
 
         employeeDao.insert(employee);
 
@@ -146,8 +151,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = Employee.builder()
                 .status(status)
                 .id(id)
-                .updateTime(LocalDateTime.now())
-                .updateUser(BaseContext.getCurrentId())
+/*                .updateTime(LocalDateTime.now())
+                .updateUser(BaseContext.getCurrentId())*/
                 .build();
         employeeDao.updateById(employee);
     }
@@ -175,8 +180,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         //代码copy到employee
         BeanUtils.copyProperties(employeeDTO,employee);
         //设置修改时间，与修改人
-        employee.setUpdateTime(LocalDateTime.now());
-        employee.setUpdateUser(BaseContext.getCurrentId());
+/*        employee.setUpdateTime(LocalDateTime.now());
+        employee.setUpdateUser(BaseContext.getCurrentId());*/
         employeeDao.updateById(employee);
     }
 }
