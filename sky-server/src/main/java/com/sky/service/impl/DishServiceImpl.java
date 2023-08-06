@@ -5,21 +5,30 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
+import com.sky.entity.Category;
 import com.sky.entity.Dish;
 import com.sky.entity.DishFlavor;
+import com.sky.mapper.CategoryDao;
 import com.sky.mapper.DishDao;
 import com.sky.mapper.DishFlavorDao;
 import com.sky.result.PageResult;
 import com.sky.service.DishService;
+import com.sky.vo.DishVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class DishServiceImpl implements DishService {
     @Autowired
     private DishDao dishDao;
+
+    @Autowired
+    private CategoryDao categoryDao;
 
     @Autowired
     private DishFlavorDao dishFlavorDao;
@@ -53,6 +62,7 @@ public class DishServiceImpl implements DishService {
      * @param dishPageQueryDTO
      * @return
      */
+    //TODO 后期可以用mybatis替换
     @Override
     public PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO) {
         IPage page = new Page(dishPageQueryDTO.getPage(), dishPageQueryDTO.getPageSize());
@@ -64,11 +74,21 @@ public class DishServiceImpl implements DishService {
                 .like(dishPageQueryDTO.getStatus()!=null,Dish::getStatus, dishPageQueryDTO.getStatus());
 
         //分页查询
-        dishDao.selectPage(page, lqw);
+        IPage iPage = dishDao.selectPage(page, lqw);
+        //将Dish数据封装到DishVO中传到前端
+        List<Dish> list = iPage.getRecords();
+        List<DishVO> dishVOList = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            DishVO dishVO = new DishVO();
+            BeanUtils.copyProperties(list.get(i),dishVO);
+            Category category = categoryDao.selectById(dishVO.getCategoryId());
+            dishVO.setCategoryName(category.getName());
+            dishVOList.add(dishVO);
+        }
         //将结果存入PageResult
         PageResult pageResult = new PageResult();
-        pageResult.setTotal(page.getTotal());
-        pageResult.setRecords(page.getRecords());
+        pageResult.setTotal(iPage.getTotal());
+        pageResult.setRecords(dishVOList);
         return pageResult;
     }
 }
