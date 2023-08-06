@@ -125,4 +125,40 @@ public class DishServiceImpl implements DishService {
             }
         }
     }
+
+    /**
+     * 根据id查询菜品
+     * @param id
+     * @return
+     */
+    @Override
+    public DishVO getById(Long id) {
+        //将查询到的Dish转为DishVO
+        DishVO dishVO = new DishVO();
+        Dish dish = dishDao.selectById(id);
+        BeanUtils.copyProperties(dish,dishVO);
+        Category category = categoryDao.selectById(dish.getCategoryId());
+        dishVO.setCategoryName(category.getName());
+        return dishVO;
+    }
+
+    /**
+     * 修改菜品
+     * @param dishDTO
+     */
+    @Override
+    public void update(DishDTO dishDTO) {
+        Dish dish = new Dish();
+        BeanUtils.copyProperties(dishDTO,dish);
+
+        dishDao.updateById(dish);
+
+        //复制属性到dishFlavor
+        for (int i = 0; i < dishDTO.getFlavors().size(); i++) {
+            DishFlavor dishFlavor = new DishFlavor();
+            BeanUtils.copyProperties(dishDTO.getFlavors().get(i), dishFlavor);
+            dishFlavor.setDishId(dish.getId());
+            dishFlavorDao.insert(dishFlavor);
+        }
+    }
 }
