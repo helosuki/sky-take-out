@@ -76,6 +76,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 新增员工
+     *
      * @param employeeDTO
      */
     @Override
@@ -84,16 +85,16 @@ public class EmployeeServiceImpl implements EmployeeService {
         //处理用户名已存在异常
         LambdaQueryWrapper<Employee> lqw = new LambdaQueryWrapper<>();
         String username = employeeDTO.getUsername();
-        lqw.eq(Employee::getUsername,username);
+        lqw.eq(Employee::getUsername, username);
         List<Employee> list = employeeDao.selectList(lqw);
         int size = list.size();
-        if(size!=0){
-            throw new AlreadyExistsException(username+MessageConstant.ALREADY_EXISTS);
+        if (size != 0) {
+            throw new AlreadyExistsException(username + MessageConstant.ALREADY_EXISTS);
         }
 
         Employee employee = new Employee();
         //对象属性拷贝
-        BeanUtils.copyProperties(employeeDTO,employee);
+        BeanUtils.copyProperties(employeeDTO, employee);
 
         //设置账号的状态
         employee.setStatus(StatusConstant.ENABLE);
@@ -115,24 +116,23 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 员工分页查询
+     *
      * @param employeePageQueryDTO
      * @return
      */
     @Override
     public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) {
         //分页
-        IPage page = new Page(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize());
+        IPage page = new Page(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
 
         LambdaQueryWrapper<Employee> lqw = new LambdaQueryWrapper<>();
 
         //判断是否使用员工姓名查询
-        String name = employeePageQueryDTO.getName();
-        if(name!=null){
-            //MP模糊查询
-            lqw.like(Employee::getName,employeePageQueryDTO.getName());
-        }
+        //MP模糊查询
+        lqw.like(employeePageQueryDTO.getName()!=null,Employee::getName, employeePageQueryDTO.getName());
 
-        employeeDao.selectPage(page,lqw);
+
+        employeeDao.selectPage(page, lqw);
 
         PageResult pageResult = new PageResult();
         pageResult.setTotal(page.getTotal());
@@ -142,6 +142,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 启用禁用员工账号
+     *
      * @param status
      * @param id
      */
@@ -159,6 +160,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 根据id查询员工
+     *
      * @param id
      * @return
      */
@@ -172,13 +174,14 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 编辑员工信息
+     *
      * @param employeeDTO
      */
     @Override
     public void update(EmployeeDTO employeeDTO) {
         Employee employee = new Employee();
         //代码copy到employee
-        BeanUtils.copyProperties(employeeDTO,employee);
+        BeanUtils.copyProperties(employeeDTO, employee);
         //设置修改时间，与修改人
 /*        employee.setUpdateTime(LocalDateTime.now());
         employee.setUpdateUser(BaseContext.getCurrentId());*/
