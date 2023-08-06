@@ -19,6 +19,7 @@ import com.sky.mapper.DishDao;
 import com.sky.mapper.SetmealDao;
 import com.sky.result.PageResult;
 import com.sky.service.CategoryService;
+import kotlin.jvm.internal.Lambda;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -181,6 +182,19 @@ public class CategoryServiceImpl implements CategoryService {
                 .build();
 
         categoryDao.updateById(category);
+    }
+
+    /**
+     * 根据类型查询分类
+     * @param type
+     * @return
+     */
+    @Override
+    public List<Category> list(Integer type) {
+        LambdaQueryWrapper<Category> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Category::getType,type);
+        List<Category> list = categoryDao.selectList(lqw);
+        return list;
     }
 
 
