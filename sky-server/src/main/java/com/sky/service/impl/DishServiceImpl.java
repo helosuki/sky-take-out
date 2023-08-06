@@ -161,4 +161,18 @@ public class DishServiceImpl implements DishService {
             dishFlavorDao.insert(dishFlavor);
         }
     }
+
+    /**
+     * 菜品启售禁售
+     * @param status
+     * @param id
+     */
+    @Override
+    public void starOrStop(Integer status, Long id) {
+        Dish dish = Dish.builder()
+                .status(status)
+                .id(id)
+                .build();
+        dishDao.updateById(dish);
+    }
 }
