@@ -8,6 +8,7 @@ import com.sky.constant.StatusConstant;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.entity.Category;
+import com.sky.entity.Dish;
 import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
 import com.sky.exception.DeletionNotAllowedException;
@@ -38,17 +39,18 @@ public class SetmealServiceImpl implements SetmealService {
 
     /**
      * 新增套餐
+     *
      * @param setmealDTO
      */
     @Override
     @Transactional
     public void save(SetmealDTO setmealDTO) {
         Setmeal setmeal = new Setmeal();
-        BeanUtils.copyProperties(setmealDTO,setmeal);
+        BeanUtils.copyProperties(setmealDTO, setmeal);
         setmealDao.insert(setmeal);
         for (int i = 0; i < setmealDTO.getSetmealDishes().size(); i++) {
             SetmealDish setmealDish = new SetmealDish();
-            BeanUtils.copyProperties(setmealDTO.getSetmealDishes().get(i),setmealDish);
+            BeanUtils.copyProperties(setmealDTO.getSetmealDishes().get(i), setmealDish);
             setmealDish.setSetmealId(setmeal.getId());
             setmealDishDao.insert(setmealDish);
         }
@@ -56,23 +58,24 @@ public class SetmealServiceImpl implements SetmealService {
 
     /**
      * 套餐分页查询
+     *
      * @param setmealPageQueryDTO
      * @return
      */
     @Override
     public PageResult pageQuery(SetmealPageQueryDTO setmealPageQueryDTO) {
-        IPage page = new Page(setmealPageQueryDTO.getPage(),setmealPageQueryDTO.getPageSize());
+        IPage page = new Page(setmealPageQueryDTO.getPage(), setmealPageQueryDTO.getPageSize());
         LambdaQueryWrapper<Setmeal> lqw_setmeal = new LambdaQueryWrapper<>();
         lqw_setmeal
-                .like(setmealPageQueryDTO.getName()!=null,Setmeal::getName,setmealPageQueryDTO.getName())
-                .like(setmealPageQueryDTO.getCategoryId()!=null,Setmeal::getCategoryId,setmealPageQueryDTO.getCategoryId())
-                .like(setmealPageQueryDTO.getStatus()!=null,Setmeal::getStatus,setmealPageQueryDTO.getStatus());
+                .like(setmealPageQueryDTO.getName() != null, Setmeal::getName, setmealPageQueryDTO.getName())
+                .like(setmealPageQueryDTO.getCategoryId() != null, Setmeal::getCategoryId, setmealPageQueryDTO.getCategoryId())
+                .like(setmealPageQueryDTO.getStatus() != null, Setmeal::getStatus, setmealPageQueryDTO.getStatus());
         IPage iPage = setmealDao.selectPage(page, lqw_setmeal);
         List<Setmeal> setmealList = iPage.getRecords();
         List<SetmealVO> setmealVOList = new ArrayList<>();
         for (int i = 0; i < setmealList.size(); i++) {
             SetmealVO setmealVO = new SetmealVO();
-            BeanUtils.copyProperties(setmealList.get(i),setmealVO);
+            BeanUtils.copyProperties(setmealList.get(i), setmealVO);
             //获取分类名
             Category category = categoryDao.selectById(setmealVO.getCategoryId());
             setmealVO.setCategoryName(category.getName());
@@ -91,6 +94,7 @@ public class SetmealServiceImpl implements SetmealService {
 
     /**
      * 批量删除
+     *
      * @param ids
      */
     @Override
@@ -100,17 +104,18 @@ public class SetmealServiceImpl implements SetmealService {
             Long id = ids[i];
             Setmeal setmeal = setmealDao.selectById(id);
             LambdaQueryWrapper<SetmealDish> lqw = new LambdaQueryWrapper<>();
-            if(setmeal.getStatus()==StatusConstant.ENABLE){
+            if (setmeal.getStatus() == StatusConstant.ENABLE) {
                 throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ON_SALE);
             }
             setmealDao.deleteById(setmeal.getId());
-            lqw.eq(SetmealDish::getSetmealId,setmeal.getId());
+            lqw.eq(SetmealDish::getSetmealId, setmeal.getId());
             setmealDishDao.delete(lqw);
         }
     }
 
     /**
      * 根据id查询套餐
+     *
      * @param id
      * @return
      */
@@ -120,12 +125,41 @@ public class SetmealServiceImpl implements SetmealService {
         Setmeal setmeal = setmealDao.selectById(id);
         Category category = categoryDao.selectById(setmeal.getCategoryId());
         LambdaQueryWrapper<SetmealDish> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(SetmealDish::getSetmealId,setmeal.getId());
+        lqw.eq(SetmealDish::getSetmealId, setmeal.getId());
         List<SetmealDish> setmealDishes = setmealDishDao.selectList(lqw);
-        BeanUtils.copyProperties(setmeal,setmealVO);
+        BeanUtils.copyProperties(setmeal, setmealVO);
         setmealVO.setCategoryName(category.getName());
         setmealVO.setSetmealDishes(setmealDishes);
         return setmealVO;
+    }
+
+    /**
+     * 修改套餐
+     *
+     * @param setmealDTO
+     */
+    @Override
+    @Transactional
+    public void update(SetmealDTO setmealDTO) {
+        Setmeal setmeal = new Setmeal();
+        BeanUtils.copyProperties(setmealDTO, setmeal);
+        setmealDao.updateById(setmeal);
+
+        Long id = setmealDTO.getId();
+        LambdaQueryWrapper<SetmealDish> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(SetmealDish::getSetmealId, id);
+        List<SetmealDish> list = setmealDishDao.selectList(lqw);
+        for (int i = 0; i < list.size(); i++) {
+            setmealDishDao.deleteById(list.get(i).getId());
+        }
+
+        List<SetmealDish> setmealDishes = setmealDTO.getSetmealDishes();
+        for (int i = 0; i < setmealDishes.size(); i++) {
+            SetmealDish setmealDish = setmealDishes.get(i);
+            setmealDish.setSetmealId(id);
+            setmealDishDao.insert(setmealDish);
+        }
+
     }
 
 
