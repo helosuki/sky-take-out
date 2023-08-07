@@ -12,11 +12,13 @@ import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
 import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.CategoryDao;
+import com.sky.mapper.DishDao;
 import com.sky.mapper.SetmealDishDao;
 import com.sky.mapper.SetmealDao;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
 import com.sky.vo.SetmealVO;
+import kotlin.jvm.internal.Lambda;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -106,4 +108,25 @@ public class SetmealServiceImpl implements SetmealService {
             setmealDishDao.delete(lqw);
         }
     }
+
+    /**
+     * 根据id查询套餐
+     * @param id
+     * @return
+     */
+    @Override
+    public SetmealVO getById(Long id) {
+        SetmealVO setmealVO = new SetmealVO();
+        Setmeal setmeal = setmealDao.selectById(id);
+        Category category = categoryDao.selectById(setmeal.getCategoryId());
+        LambdaQueryWrapper<SetmealDish> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(SetmealDish::getSetmealId,setmeal.getId());
+        List<SetmealDish> setmealDishes = setmealDishDao.selectList(lqw);
+        BeanUtils.copyProperties(setmeal,setmealVO);
+        setmealVO.setCategoryName(category.getName());
+        setmealVO.setSetmealDishes(setmealDishes);
+        return setmealVO;
+    }
+
+
 }
