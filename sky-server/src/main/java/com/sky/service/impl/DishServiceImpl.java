@@ -175,4 +175,17 @@ public class DishServiceImpl implements DishService {
                 .build();
         dishDao.updateById(dish);
     }
+
+    /**
+     * 根据分类id查询菜品
+     * @param categoryId
+     * @return
+     */
+    @Override
+    public List<Dish> list(Integer categoryId) {
+        LambdaQueryWrapper<Dish> lqw =new LambdaQueryWrapper<>();
+        lqw.eq(Dish::getCategoryId,categoryId);
+        List<Dish> dishList = dishDao.selectList(lqw);
+        return dishList;
+    }
 }
