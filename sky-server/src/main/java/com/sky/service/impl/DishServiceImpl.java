@@ -34,7 +34,7 @@ public class DishServiceImpl implements DishService {
     private DishFlavorDao dishFlavorDao;
     //套餐接口
     @Autowired
-    private SetMealDishDao setMealDishDao;
+    private SetmealDishDao setMealDishDao;
 
     /**
      * 新增菜品
@@ -65,7 +65,6 @@ public class DishServiceImpl implements DishService {
      * @param dishPageQueryDTO
      * @return
      */
-    //TODO 后期可以用mybatis替换
     @Override
     public PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO) {
         IPage page = new Page(dishPageQueryDTO.getPage(), dishPageQueryDTO.getPageSize());

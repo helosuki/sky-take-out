@@ -5,5 +5,5 @@ import com.sky.entity.SetmealDish;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-public interface SetMealDishDao extends BaseMapper<SetmealDish> {
+public interface SetmealDishDao extends BaseMapper<SetmealDish> {
 }
