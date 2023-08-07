@@ -3,11 +3,14 @@ package com.sky.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sky.constant.MessageConstant;
+import com.sky.constant.StatusConstant;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.entity.Category;
 import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
+import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.CategoryDao;
 import com.sky.mapper.SetmealDishDao;
 import com.sky.mapper.SetmealDao;
@@ -82,5 +85,25 @@ public class SetmealServiceImpl implements SetmealService {
         pageResult.setTotal(iPage.getTotal());
         pageResult.setRecords(setmealVOList);
         return pageResult;
+    }
+
+    /**
+     * 批量删除
+     * @param ids
+     */
+    @Override
+    @Transactional
+    public void delete(Long[] ids) {
+        for (int i = 0; i < ids.length; i++) {
+            Long id = ids[i];
+            Setmeal setmeal = setmealDao.selectById(id);
+            LambdaQueryWrapper<SetmealDish> lqw = new LambdaQueryWrapper<>();
+            if(setmeal.getStatus()==StatusConstant.ENABLE){
+                throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ON_SALE);
+            }
+            setmealDao.deleteById(setmeal.getId());
+            lqw.eq(SetmealDish::getSetmealId,setmeal.getId());
+            setmealDishDao.delete(lqw);
+        }
     }
 }
