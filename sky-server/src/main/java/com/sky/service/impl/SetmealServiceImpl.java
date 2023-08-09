@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sky.constant.MessageConstant;
 import com.sky.constant.StatusConstant;
+import com.sky.dto.DishDTO;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.entity.Category;
@@ -18,6 +19,7 @@ import com.sky.mapper.SetmealDishDao;
 import com.sky.mapper.SetmealDao;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
+import com.sky.vo.DishItemVO;
 import com.sky.vo.SetmealVO;
 import kotlin.jvm.internal.Lambda;
 import org.springframework.beans.BeanUtils;
@@ -36,6 +38,8 @@ public class SetmealServiceImpl implements SetmealService {
     private SetmealDishDao setmealDishDao;
     @Autowired
     private CategoryDao categoryDao;
+    @Autowired
+    private DishDao dishDao;
 
     /**
      * 新增套餐
@@ -174,6 +178,39 @@ public class SetmealServiceImpl implements SetmealService {
                 .status(status)
                 .build();
         setmealDao.updateById(setmeal);
+    }
+
+    /**
+     * 用户端根据分类id查询套餐
+     * @param categoryId
+     * @return
+     */
+    @Override
+    public List<Setmeal> list(Integer categoryId) {
+        LambdaQueryWrapper<Setmeal> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Setmeal::getCategoryId,categoryId);
+        List<Setmeal> list = setmealDao.selectList(lqw);
+        return list;
+    }
+
+    /**
+     * 用户端根据套餐id查询包含的菜品
+     * @param id
+     */
+    @Override
+    public List<DishItemVO> getByIdUser(Long id) {
+        LambdaQueryWrapper<SetmealDish> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(SetmealDish::getSetmealId,id);
+        List<SetmealDish> list = setmealDishDao.selectList(lqw);
+        List<DishItemVO> dishItemVOList = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            Dish dish = dishDao.selectById(list.get(i).getDishId());
+            DishItemVO dishItemVO = new DishItemVO();
+            BeanUtils.copyProperties(dish,dishItemVO);
+            dishItemVO.setCopies(list.get(i).getCopies());
+            dishItemVOList.add(dishItemVO);
+        }
+        return dishItemVOList;
     }
 
 
