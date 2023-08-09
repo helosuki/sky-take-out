@@ -185,7 +185,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<Category> list(Integer type) {
         LambdaQueryWrapper<Category> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(Category::getType, type);
+        lqw.eq(type!=null,Category::getType, type);
         List<Category> list = categoryDao.selectList(lqw);
         return list;
     }

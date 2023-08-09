@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * 分类管理
  */
-@RestController
+@RestController("AdminCategoryController")
 @RequestMapping("/admin/category")
 @Slf4j
 @Api(tags = "分类相关接口")
@@ -93,14 +93,14 @@ public class CategoryController {
     }
 
     /**
-     * 根据类型查询分类
+     * 管理端根据类型查询分类
      * @param type
      * @return
      */
     @GetMapping("/list")
-    @ApiOperation("根据类型查询分类")
+    @ApiOperation("管理端根据类型查询分类")
     public Result<List<Category>> list(Integer type){
-        log.info("根据类型查询分类:{}",type);
+        log.info("管理端根据类型查询分类:{}",type);
         List<Category> list = categoryService.list(type);
         return Result.success(list);
     }

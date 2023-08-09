@@ -176,7 +176,7 @@ public class DishServiceImpl implements DishService {
     }
 
     /**
-     * 根据分类id查询菜品
+     * 管理端根据分类id查询菜品
      * @param categoryId
      * @return
      */
@@ -186,5 +186,29 @@ public class DishServiceImpl implements DishService {
         lqw.eq(Dish::getCategoryId,categoryId);
         List<Dish> dishList = dishDao.selectList(lqw);
         return dishList;
+    }
+
+
+    /**
+     * 用户端根据分类id查询菜品
+     * @param categoryId
+     * @return
+     */
+    @Override
+    public List<DishVO> UserList(Integer categoryId) {
+        LambdaQueryWrapper<Dish> lqw =new LambdaQueryWrapper<>();
+        lqw.eq(Dish::getCategoryId,categoryId);
+        List<Dish> dishList = dishDao.selectList(lqw);
+        List<DishVO> dishVOList = new ArrayList<>();
+        for (int i = 0; i < dishList.size(); i++) {
+            Dish dish = dishList.get(i);
+            DishVO dishVO = new DishVO();
+            BeanUtils.copyProperties(dish,dishVO);
+            LambdaQueryWrapper<DishFlavor> lqw_flavor = new LambdaQueryWrapper<>();
+            lqw_flavor.eq(DishFlavor::getDishId,dish.getId());
+            dishVO.setFlavors(dishFlavorDao.selectList(lqw_flavor));
+            dishVOList.add(dishVO);
+        }
+        return dishVOList;
     }
 }
