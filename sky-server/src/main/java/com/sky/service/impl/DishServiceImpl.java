@@ -15,9 +15,11 @@ import com.sky.service.DishService;
 import com.sky.vo.DishVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +37,6 @@ public class DishServiceImpl implements DishService {
     //套餐接口
     @Autowired
     private SetmealDishDao setMealDishDao;
-
     /**
      * 新增菜品
      *
@@ -149,9 +150,7 @@ public class DishServiceImpl implements DishService {
     public void update(DishDTO dishDTO) {
         Dish dish = new Dish();
         BeanUtils.copyProperties(dishDTO,dish);
-
         dishDao.updateById(dish);
-
         //复制属性到dishFlavor
         for (int i = 0; i < dishDTO.getFlavors().size(); i++) {
             DishFlavor dishFlavor = new DishFlavor();
@@ -159,6 +158,7 @@ public class DishServiceImpl implements DishService {
             dishFlavor.setDishId(dish.getId());
             dishFlavorDao.insert(dishFlavor);
         }
+
     }
 
     /**
