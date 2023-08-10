@@ -101,7 +101,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 .eq(shoppingCartDTO.getDishFlavor() != null, ShoppingCart::getDishFlavor, shoppingCartDTO.getDishFlavor())
                 .eq(ShoppingCart::getUserId, BaseContext.getCurrentId())
                 .eq(shoppingCartDTO.getSetmealId() != null, ShoppingCart::getSetmealId, shoppingCartDTO.getSetmealId());
-        shoppingCartDao.delete(lqw);
+
+        List<ShoppingCart> list = shoppingCartDao.selectList(lqw);
+        ShoppingCart cart = list.get(0);
+        if(cart.getNumber()>1){
+            cart.setNumber(cart.getNumber()-1);
+            shoppingCartDao.updateById(cart);
+        }else {
+            shoppingCartDao.delete(lqw);
+        }
     }
 
     /**
