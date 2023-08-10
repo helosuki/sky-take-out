@@ -188,7 +188,7 @@ public class SetmealServiceImpl implements SetmealService {
     @Override
     public List<Setmeal> list(Integer categoryId) {
         LambdaQueryWrapper<Setmeal> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(Setmeal::getCategoryId,categoryId);
+        lqw.eq(Setmeal::getCategoryId,categoryId).eq(Setmeal::getStatus,StatusConstant.ENABLE);
         List<Setmeal> list = setmealDao.selectList(lqw);
         return list;
     }

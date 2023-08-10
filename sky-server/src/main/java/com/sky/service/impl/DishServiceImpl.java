@@ -197,7 +197,7 @@ public class DishServiceImpl implements DishService {
     @Override
     public List<DishVO> UserList(Integer categoryId) {
         LambdaQueryWrapper<Dish> lqw =new LambdaQueryWrapper<>();
-        lqw.eq(Dish::getCategoryId,categoryId);
+        lqw.eq(Dish::getCategoryId,categoryId).eq(Dish::getStatus,StatusConstant.ENABLE);
         List<Dish> dishList = dishDao.selectList(lqw);
         List<DishVO> dishVOList = new ArrayList<>();
         for (int i = 0; i < dishList.size(); i++) {
