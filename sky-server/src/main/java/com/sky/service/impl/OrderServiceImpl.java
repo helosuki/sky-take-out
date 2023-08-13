@@ -130,6 +130,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param outTradeNo
      */
+    @Transactional
     public void paySuccess(String outTradeNo) {
 
         // 根据订单号查询订单
@@ -145,7 +146,13 @@ public class OrderServiceImpl implements OrderService {
                 .payStatus(Orders.PAID)
                 .checkoutTime(LocalDateTime.now())
                 .build();
-
+        //删除购物车
+        LambdaQueryWrapper<ShoppingCart> lqw_shoppingCart = new LambdaQueryWrapper<>();
+        lqw_shoppingCart.eq(ShoppingCart::getUserId,userId);
+        List<ShoppingCart> shoppingCartList = shoppingCartDao.selectList(lqw_shoppingCart);
+        for (ShoppingCart shoppingCart : shoppingCartList) {
+            shoppingCartDao.deleteById(shoppingCart.getId());
+        }
         orderDao.updateById(orders);
     }
 }
