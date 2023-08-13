@@ -2,10 +2,13 @@ package com.sky.controller.user;
 
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
+import com.sky.entity.Orders;
+import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -48,5 +51,27 @@ public class OrderController {
         //无法调用接口模拟调用
         orderService.paySuccess(ordersPaymentDTO.getOrderNumber());
         return Result.success(orderPaymentVO);
+    }
+
+    /**
+     * 查询订单详情
+     */
+    @GetMapping("/orderDetail/{id}")
+    @ApiOperation("查询订单详情")
+    public Result<OrderVO> getById(@PathVariable Long id){
+        log.info("查询订单详情:{}",id);
+        OrderVO orderVO = orderService.getById(id);
+        return Result.success(orderVO);
+    }
+
+    /**
+     * 历史订单查询
+     */
+    @GetMapping("/historyOrders")
+    @ApiOperation("历史订单查询")
+    public Result<PageResult> page(int page,int pageSize,Integer status){
+        log.info("历史订单查询:{},{},{}",page,pageSize,status);
+        PageResult pageResult = orderService.pageQuery(page,pageSize,status);
+        return Result.success(pageResult);
     }
 }

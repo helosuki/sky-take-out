@@ -2,6 +2,8 @@ package com.sky.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.OrdersPaymentDTO;
@@ -9,10 +11,12 @@ import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.*;
 import com.sky.exception.OrderBusinessException;
 import com.sky.mapper.*;
+import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -73,6 +78,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setPhone(addressBook.getPhone());
         orders.setConsignee(addressBook.getConsignee());
         orders.setUserId(userId);
+        orders.setAddress(addressBook.getProvinceName()+addressBook.getDistrictName()+addressBook.getCityName());
         orderDao.insert(orders);
         //向订orderDetail表插入数据
         for (int i = 0; i < shoppingCartList.size(); i++) {
@@ -154,5 +160,56 @@ public class OrderServiceImpl implements OrderService {
             shoppingCartDao.deleteById(shoppingCart.getId());
         }
         orderDao.updateById(orders);
+    }
+
+    /**
+     * 查询订单详情
+     * @param id
+     * @return
+     */
+    @Override
+    public OrderVO getById(Long id) {
+        Orders orders = orderDao.selectById(id);
+        OrderVO orderVO = new OrderVO();
+        LambdaQueryWrapper<OrderDetail> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(OrderDetail::getOrderId,id);
+        List<OrderDetail> orderDetails = orderDetailDao.selectList(lqw);
+        BeanUtils.copyProperties(orders,orderVO);
+        orderVO.setOrderDetailList(orderDetails);
+        return orderVO;
+    }
+
+    /**
+     * 历史订单查询
+     * @param pageNum
+     * @param pageSize
+     * @param status
+     * @return
+     */
+    @Override
+    public PageResult pageQuery(int pageNum, int pageSize, Integer status) {
+        IPage page= new Page(pageNum,pageSize);
+        LambdaQueryWrapper<Orders> lqw =new LambdaQueryWrapper<>();
+        lqw
+                .eq(Orders::getUserId,BaseContext.getCurrentId())
+                .eq(status!=null,Orders::getStatus,status);
+        IPage iPage = orderDao.selectPage(page, lqw);
+        List<Orders> ordersList = iPage.getRecords();
+        List<OrderVO> list = new ArrayList<>();
+        if(page!=null&&page.getTotal()>0){
+            for (Orders orders : ordersList) {
+                OrderVO orderVO = new OrderVO();
+                BeanUtils.copyProperties(orders,orderVO);
+                LambdaQueryWrapper<OrderDetail> lqw_orderDetail = new LambdaQueryWrapper<>();
+                lqw_orderDetail.eq(OrderDetail::getOrderId,orders.getId());
+                List<OrderDetail> orderDetails = orderDetailDao.selectList(lqw_orderDetail);
+                orderVO.setOrderDetailList(orderDetails);
+                list.add(orderVO);
+            }
+        }
+        PageResult pageResult = new PageResult();
+        pageResult.setTotal(page.getTotal());
+        pageResult.setRecords(list);
+        return pageResult;
     }
 }
