@@ -74,4 +74,16 @@ public class OrderController {
         PageResult pageResult = orderService.pageQuery(page,pageSize,status);
         return Result.success(pageResult);
     }
+
+    /**
+     * 取消订单
+     */
+
+    @PutMapping("/cancel/{id}")
+    @ApiOperation("取消订单")
+    public Result cancel(@PathVariable Long id){
+        log.info("取消订单");
+        orderService.cancel(id);
+        return Result.success();
+    }
 }
