@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
+@RestController("UserOrderController")
 @Slf4j
 @RequestMapping("/user/order")
 @Api(tags = "C端-订单接口")
@@ -84,6 +84,17 @@ public class OrderController {
     public Result cancel(@PathVariable Long id){
         log.info("取消订单");
         orderService.cancel(id);
+        return Result.success();
+    }
+
+    /**
+     * 再来一单
+     */
+    @PostMapping("/repetition/{id}")
+    @ApiOperation("再来一单")
+    public Result repetition(@PathVariable Long id){
+        log.info("再来一单:{}",id);
+        orderService.againOrder(id);
         return Result.success();
     }
 }

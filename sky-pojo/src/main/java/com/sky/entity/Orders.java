@@ -34,6 +34,11 @@ public class Orders implements Serializable {
     public static final Integer UN_PAID = 0;
     public static final Integer PAID = 1;
     public static final Integer REFUND = 2;
+    /**
+     * 打包费
+     */
+    public static final Integer PACK_AMOUNT = 1;
+
 
     private static final long serialVersionUID = 1L;
 
