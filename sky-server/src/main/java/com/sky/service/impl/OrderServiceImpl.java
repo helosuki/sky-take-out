@@ -491,6 +491,26 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
+     * 用户催单
+     * @param id
+     */
+    @Override
+    public void reminderOrder(Long id) {
+        Long userId = BaseContext.getCurrentId();
+        LambdaQueryWrapper<Orders> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Orders::getId,id).eq(Orders::getUserId,userId);
+        Orders ordersDB = orderDao.selectList(lqw).get(0);
+        Map map = new HashMap();
+        map.put("type",2);
+        map.put("orderId",id);
+        map.put("content","订单号："+ordersDB.getNumber());
+
+        String json = JSON.toJSONString(map);
+        webSocketServer.sendToAllClient(json);
+    }
+
+
+    /**
      * 根据订单id获取菜品信息字符串
      *
      * @param orders
