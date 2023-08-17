@@ -1,11 +1,17 @@
 package com.sky.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.sky.dto.GoodsSalesDTO;
+import com.sky.entity.OrderDetail;
 import com.sky.entity.Orders;
 import com.sky.entity.User;
 import com.sky.mapper.OrderDao;
+import com.sky.mapper.OrderDetailDao;
 import com.sky.mapper.UserDao;
 import com.sky.service.ReportService;
+import com.sky.vo.OrderReportVO;
+import com.sky.vo.SalesTop10ReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 import org.apache.commons.lang3.StringUtils;
@@ -14,11 +20,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReportServiceImpl implements ReportService {
@@ -27,7 +37,8 @@ public class ReportServiceImpl implements ReportService {
     private OrderDao orderDao;
     @Autowired
     private UserDao userDao;
-
+    @Autowired
+    private OrderDetailDao orderDetailDao;
     /**
      * 营业额统计接口
      *
@@ -103,10 +114,88 @@ public class ReportServiceImpl implements ReportService {
             List<User> users_total= userDao.selectList(lqw_yesterday);
             totalUsers.add(users_total.size());
         }
-        String totalUser = StringUtils.join(totalUsers);
-        String newUser = StringUtils.join(newUsers);
+        String totalUser = StringUtils.join(totalUsers,",");
+        String newUser = StringUtils.join(newUsers,",");
         vo.setTotalUserList(totalUser);
         vo.setNewUserList(newUser);
+        return vo;
+    }
+
+    /**
+     * 订单统计接口
+     * @param begin
+     * @param end
+     * @return
+     */
+    @Override
+    public OrderReportVO orderReport(LocalDate begin, LocalDate end) {
+        //调用设置日期方法
+        List<LocalDate> localDates = getLocalDates(begin, end);
+        String join = StringUtils.join(localDates);
+        OrderReportVO vo = new OrderReportVO();
+        vo.setDateList(join);
+        //总用户数量
+        List<Integer> totalOrdersList = new ArrayList<>();
+        //新增用户数量
+        List<Integer> validOrdersList = new ArrayList<>();
+        for (LocalDate localDate : localDates) {
+            LocalDateTime beginTime = LocalDateTime.of(localDate, LocalTime.MIN);
+            LocalDateTime endTime = LocalDateTime.of(localDate, LocalTime.MAX);
+            //总订单数列表
+            LambdaQueryWrapper<Orders> lqw_total= new LambdaQueryWrapper<>();
+            lqw_total
+                    .ge(Orders::getOrderTime,beginTime)
+                    .lt(Orders::getOrderTime,endTime);
+            List<Orders> total = orderDao.selectList(lqw_total);
+            totalOrdersList.add(total.size());
+
+            //有效订单列表
+            LambdaQueryWrapper<Orders> lqw_valid = new LambdaQueryWrapper<>();
+            lqw_valid
+                    .ge(Orders::getOrderTime,beginTime)
+                    .lt(Orders::getOrderTime,endTime)
+                    .eq(Orders::getStatus,Orders.COMPLETED);
+            List<Orders> valid = orderDao.selectList(lqw_valid);
+            validOrdersList.add(valid.size());
+        }
+        String totalList = StringUtils.join(totalOrdersList,",");
+        vo.setOrderCountList(totalList);
+        String validList = StringUtils.join(validOrdersList,",");
+        vo.setValidOrderCountList(validList);
+
+
+        Integer totalOrderCount = totalOrdersList.stream().reduce(Integer::sum).get();
+        Integer validOrderCount = validOrdersList.stream().reduce(Integer::sum).get();
+        Double rate = validOrderCount.doubleValue()/totalOrderCount;
+        vo.setValidOrderCount(validOrderCount);
+        vo.setTotalOrderCount(totalOrderCount);
+        vo.setOrderCompletionRate(rate);
+        return vo;
+    }
+
+    /**
+     * 查询销量排名top10接口
+     * @param begin
+     * @param end
+     * @return
+     */
+    @Override
+    public SalesTop10ReportVO Top10Report(LocalDate begin, LocalDate end) {
+        LocalDateTime beginTime = LocalDateTime.of(begin, LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(end, LocalTime.MAX);
+        List<GoodsSalesDTO> dto = orderDao.getTop10(beginTime,endTime);
+
+        List<String> nameList = new ArrayList<>();
+        List<Integer> numberList = new ArrayList<>();
+        for (GoodsSalesDTO goodsSalesDTO : dto) {
+            nameList.add(goodsSalesDTO.getName());
+            numberList.add(goodsSalesDTO.getNumber());
+        }
+        String name = StringUtils.join(nameList, ",");
+        String number = StringUtils.join(numberList, ",");
+        SalesTop10ReportVO vo  = new SalesTop10ReportVO();
+        vo.setNameList(name);
+        vo.setNumberList(number);
         return vo;
     }
 
