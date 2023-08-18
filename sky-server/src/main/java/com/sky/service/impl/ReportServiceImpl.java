@@ -1,13 +1,10 @@
 package com.sky.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.sky.dto.GoodsSalesDTO;
-import com.sky.entity.OrderDetail;
 import com.sky.entity.Orders;
 import com.sky.entity.User;
 import com.sky.mapper.OrderDao;
-import com.sky.mapper.OrderDetailDao;
 import com.sky.mapper.UserDao;
 import com.sky.service.ReportService;
 import com.sky.vo.OrderReportVO;
@@ -20,15 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ReportServiceImpl implements ReportService {
@@ -37,8 +30,6 @@ public class ReportServiceImpl implements ReportService {
     private OrderDao orderDao;
     @Autowired
     private UserDao userDao;
-    @Autowired
-    private OrderDetailDao orderDetailDao;
     /**
      * 营业额统计接口
      *
