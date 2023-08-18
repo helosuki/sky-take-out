@@ -12,6 +12,7 @@ import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.dto.EmployeePageQueryDTO;
+import com.sky.dto.PasswordEditDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
@@ -185,6 +186,23 @@ public class EmployeeServiceImpl implements EmployeeService {
         //设置修改时间，与修改人
 /*        employee.setUpdateTime(LocalDateTime.now());
         employee.setUpdateUser(BaseContext.getCurrentId());*/
+        employeeDao.updateById(employee);
+    }
+
+    /**
+     * 修改密码
+     * @param passwordEditDTO
+     */
+    @Override
+    public void updatePassword(PasswordEditDTO passwordEditDTO) {
+        LambdaQueryWrapper<Employee> lqw = new LambdaQueryWrapper<>();
+        String password = DigestUtils.md5DigestAsHex(passwordEditDTO.getOldPassword().getBytes());
+        Long id = BaseContext.getCurrentId();
+        lqw
+                .eq(Employee::getId,id)
+                .eq(Employee::getPassword,password);
+        Employee employee = employeeDao.selectList(lqw).get(0);
+        employee.setPassword(DigestUtils.md5DigestAsHex(passwordEditDTO.getNewPassword().getBytes()));
         employeeDao.updateById(employee);
     }
 }
