@@ -5,6 +5,8 @@ import com.sky.vo.SalesTop10ReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Date;
 
@@ -40,4 +42,9 @@ public interface ReportService {
      * @return
      */
     SalesTop10ReportVO Top10Report(LocalDate begin, LocalDate end);
+
+    /**
+     * 导出Excel报表接口
+     */
+    void exportExcel(HttpServletResponse response) throws IOException;
 }

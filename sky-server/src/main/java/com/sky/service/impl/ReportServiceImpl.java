@@ -7,15 +7,19 @@ import com.sky.entity.User;
 import com.sky.mapper.OrderDao;
 import com.sky.mapper.UserDao;
 import com.sky.service.ReportService;
-import com.sky.vo.OrderReportVO;
-import com.sky.vo.SalesTop10ReportVO;
-import com.sky.vo.TurnoverReportVO;
-import com.sky.vo.UserReportVO;
+import com.sky.service.WorkspaceService;
+import com.sky.vo.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,6 +34,9 @@ public class ReportServiceImpl implements ReportService {
     private OrderDao orderDao;
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private WorkspaceService workspaceService;
     /**
      * 营业额统计接口
      *
@@ -157,7 +164,10 @@ public class ReportServiceImpl implements ReportService {
 
         Integer totalOrderCount = totalOrdersList.stream().reduce(Integer::sum).get();
         Integer validOrderCount = validOrdersList.stream().reduce(Integer::sum).get();
-        Double rate = validOrderCount.doubleValue()/totalOrderCount;
+        Double rate = 0d;
+        if(totalOrderCount!=0){
+            rate = validOrderCount.doubleValue()/totalOrderCount;
+        }
         vo.setValidOrderCount(validOrderCount);
         vo.setTotalOrderCount(totalOrderCount);
         vo.setOrderCompletionRate(rate);
@@ -188,6 +198,52 @@ public class ReportServiceImpl implements ReportService {
         vo.setNameList(name);
         vo.setNumberList(number);
         return vo;
+    }
+
+    /**
+     * 导出Excel报表接口
+     */
+    @Override
+    public void exportExcel(HttpServletResponse response) throws IOException {
+        //1. 查询数据库，获取营业数据---查询最近30天的运营数据
+        LocalDate dateBegin = LocalDate.now().minusDays(30);
+        LocalDate dateEnd = LocalDate.now().minusDays(1);
+        //获取概览数据
+        BusinessDataVO businessDataVO = workspaceService.GetBusinesssData(dateBegin, dateEnd);
+        //获取日期列表
+        List<LocalDate> localDates = getLocalDates(dateBegin, dateEnd);
+        //读取excel模板
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream("template/运营数据报表模板.xlsx");
+        XSSFWorkbook excel = new XSSFWorkbook(in);
+        XSSFSheet sheet = excel.getSheetAt(0);
+        //添加概览数据
+        sheet.getRow(1).getCell(1).setCellValue("时间：" + dateBegin + "至" + dateEnd);
+        XSSFRow row = sheet.getRow(3);
+        row.getCell(2).setCellValue(businessDataVO.getTurnover());
+        row.getCell(4).setCellValue(businessDataVO.getOrderCompletionRate());
+        row.getCell(6).setCellValue(businessDataVO.getNewUsers());
+        row = sheet.getRow(4);
+        row.getCell(2).setCellValue(businessDataVO.getValidOrderCount());
+        row.getCell(4).setCellValue(businessDataVO.getUnitPrice());
+
+        int rows = 7;
+        for (LocalDate localDate : localDates) {
+            BusinessDataVO businessDataVO2 = workspaceService.GetBusinesssData(localDate, localDate);
+            row  = sheet.getRow(rows);
+            row.getCell(1).setCellValue(String.valueOf(localDate));
+            row.getCell(2).setCellValue(businessDataVO2.getTurnover());
+            row.getCell(3).setCellValue(businessDataVO2.getValidOrderCount());
+            row.getCell(4).setCellValue(businessDataVO2.getOrderCompletionRate());
+            row.getCell(5).setCellValue(businessDataVO2.getUnitPrice());
+            row.getCell(6).setCellValue(businessDataVO2.getNewUsers());
+            rows++;
+        }
+        ServletOutputStream out = response.getOutputStream();
+        excel.write(out);
+        //关闭资源
+        out.close();
+        in.close();
+        excel.close();
     }
 
 
